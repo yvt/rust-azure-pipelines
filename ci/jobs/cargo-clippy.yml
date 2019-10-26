@@ -6,6 +6,9 @@ parameters:
   job_condition: true               # Job condition
   job_continueOnError: false        # Treat error as warings?
   job_post-steps: []                # Custom steps running after job
+  job_pre-steps: []                 # Custom steps before job start
+  job_pool:
+    vmImage: ubuntu-16.04           # Default vmImage
 
   # global parameters
   rust: stable                # Version of rust. Could be [stable, beta, nightly, 1.31, nightly-2018-08-01 ... ]
@@ -53,11 +56,15 @@ jobs:
   continueOnError: ${{ parameters['job_continueOnError'] }}
   dependsOn: ${{ parameters['job_dependsOn'] }}
   pool:
-    vmImage: ubuntu-16.04
+    vmImage: ${{ parameters.job_pool['vmImage'] }}
   variables:
     clippy_flags: ''
     check_flags: ''
   steps:
+  # Custom pre steps:
+  - ${{ if parameters['job_pre-steps'] }}:
+    - ${{ parameters['job_pre-steps'] }}
+
   - template: ../steps/install-rust.yml
     parameters:
       rustup_toolchain: ${{ parameters.rust }}
@@ -187,7 +194,7 @@ jobs:
       displayName: "[cli flag modify]Add Z flag ${{ z }}"
   # ##########################################################################################
 
-  - script: cargo clippy $(check_flags) -- $(clippy_flags) 
+  - script: cargo clippy $(check_flags) -- $(clippy_flags)
     displayName: Run clippy with custom flags
 
   # Custom steps:

@@ -9,16 +9,19 @@ parameters:
     matrix:
       Linux:
         vmImage: ubuntu-16.04
+        prepareScript: ""
       MacOS:
         vmImage: macOS-10.13
+        prepareScript: ""
       Windows:
         vmImage: vs2017-win2016
+        prepareScript: ""
   # global parameters
   rust: stable                # Version of rust. Could be [stable, beta, nightly, 1.31, nightly-2018-08-01 ... ]
 
   # parameters from `cargo test --help`
   # TODO
-  
+
   # parameters from libtest `cargo test -- --help`
   test_flags:
     include-ignored: false      # Run ignored and not ignored tests
@@ -61,6 +64,11 @@ jobs:
   variables:
     check_flags: ''
   steps:
+  # Custom pre steps:
+  - ${{ if variables.prepareScript }}:
+    - script: ${{ variables.prepareScript }}
+    - displayName: "Prepare"
+
   - template: ../steps/install-rust.yml
     parameters:
       rustup_toolchain: ${{ parameters.rust }}
@@ -107,7 +115,7 @@ jobs:
   - ${{ each s in parameters.test_flags['skip'] }}:
     - script: echo '##vso[task.setvariableV variable=check_flags]$(check_flags) --skip ${{ s }}'
       displayName: "[cli flag modify]Skip test using filter ${{ s }}"
-      
+
   - script: echo '##vso[task.setvariable variable=check_flags]$(check_flags) --quite'
     enabled: ${{ parameters.test_flags['quite'] }}
     displayName: "[cli flag modify]Display one character per test instead of one line."
@@ -119,7 +127,7 @@ jobs:
   - script: echo "##vso[task.setvariable variable=check_flags]$(check_flags) --color ${{ parameters.test_flags['color'] }}"
     enabled: ${{ ne(parameters.test_flags['color'], '') }}
     displayName: "[cli flag modify] Configure coloring of output: ${{ parameters.test_flags['color'] }}"
-    
+
   - script: echo "##vso[task.setvariable variable=check_flags]$(check_flags) --format ${{ parameters.test_flags['format'] }}"
     enabled: ${{ ne(parameters.test_flags['format'], '') }}
     displayName: "[cli flag modify] Configure formatting of output: ${{ parameters.test_flags['format'] }}"
@@ -131,7 +139,7 @@ jobs:
   # *********************************************************************************************
   - script: cargo test -- $(check_flags)
     displayName: cargo test
-    
+
   # Custom steps:
   - ${{ if parameters['job_post-steps'] }}:
     - ${{ parameters['job_post-steps'] }}

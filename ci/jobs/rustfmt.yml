@@ -4,7 +4,7 @@ parameters:
   job_displayName: Check formatting # Default displayName
   job_dependsOn: []                 # Dependencies to for the job to start
   job_condition: true               # Job condition
-  job_continueOnError: false        
+  job_continueOnError: false
   job_post-steps: []                # Custom steps running after job
 
   # global parameters
@@ -12,7 +12,7 @@ parameters:
 
   # parameters from `cargo fmt --help`
   all: true                             # format all packages (only usable in workspaces)
-  
+
   # parameters from `rustfmt --help`
   check: true                            # Run in 'check' mode. Exits with 0 if input is
                                          # formatted correctly. Exits with 1 and prints a diff if

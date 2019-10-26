@@ -6,6 +6,9 @@ parameters:
   job_condition: true               # Job condition
   job_continueOnError: false        # Should other job still run even if this fail
   job_post-steps: []                # Custom steps running after job
+  job_pre-steps: []                 # Custom steps before job start
+  job_pool:
+    vmImage: ubuntu-16.04           # Default vmImage
 
   # global parameters
   rust: stable                # Version of rust. Could be [stable, beta, nightly, 1.31, nightly-2018-08-01 ... ]
@@ -47,14 +50,18 @@ jobs:
   dependsOn: ${{ parameters['job_dependsOn'] }}
   continueOnError: ${{ parameters['job_continueOnError'] }}
   pool:
-    vmImage: ubuntu-16.04
+    vmImage: ${{ parameters.job_pool['vmImage'] }}
   variables:
     check_flags: ''
   steps:
+  # Custom pre steps:
+  - ${{ if parameters['job_pre-steps'] }}:
+    - ${{ parameters['job_pre-steps'] }}
+
   - template: ../steps/install-rust.yml
     parameters:
       rustup_toolchain: ${{ parameters['rust'] }}
- 
+
   # ##########################################################################################
   # Order of script modifying `check_flags` is the same as in paramters.
   - script: echo '##vso[task.setvariable variable=check_flags]$(check_flags) --quiet'
@@ -164,7 +171,7 @@ jobs:
 
   # Final run
   - script: cargo check $(check_flags)
-    displayName: Run Cargo check with defined flags 
+    displayName: Run Cargo check with defined flags
 
   # Custom steps:
   - ${{ if parameters['job_post-steps'] }}:
