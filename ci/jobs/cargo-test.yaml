@@ -65,9 +65,8 @@ jobs:
     check_flags: ''
   steps:
   # Custom pre steps:
-  - ${{ if variables.prepareScript }}:
-    - script: ${{ variables.prepareScript }}
-    - displayName: "Prepare"
+  - script: $(prepareScript)
+    displayName: "Prepare"
 
   - template: ../steps/install-rust.yml
     parameters:
