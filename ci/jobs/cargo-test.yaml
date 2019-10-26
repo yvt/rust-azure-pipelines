@@ -20,7 +20,9 @@ parameters:
   rust: stable                # Version of rust. Could be [stable, beta, nightly, 1.31, nightly-2018-08-01 ... ]
 
   # parameters from `cargo test --help`
-  # TODO
+  all: false                  # Test all packages in the workspace
+  features: ''                # Space-separated list of features to activate
+  no-default-features: false  # Do not activate the `default` feature
 
   # parameters from libtest `cargo test -- --help`
   test_flags:
@@ -63,6 +65,7 @@ jobs:
     vmImage: $(vmImage)
   variables:
     check_flags: ''
+    test_build_flags: ''
   steps:
   # Custom pre steps:
   - script: $(prepareScript)
@@ -71,6 +74,21 @@ jobs:
   - template: ../steps/install-rust.yml
     parameters:
       rustup_toolchain: ${{ parameters.rust }}
+
+  # *********************************************************************************************
+  # parameters from `cargo test --help`
+
+  - script: echo '##vso[task.setvariable variable=test_build_flags]$(test_build_flags) --all'
+    enabled: ${{ parameters['all'] }}
+    displayName: "[cli flag modify]Test all packages in the workspace"
+
+  - script: echo '##vso[task.setvariable variable=test_build_flags]$(test_build_flags) --no-default-features'
+    enabled: ${{ parameters['no-default-features'] }}
+    displayName: "[cli flag modify]Do not activate the `default` feature"
+
+  - bash: echo "##vso[task.setvariable variable=test_build_flags]$(test_build_flags) --features ${{ parameters['features'] }}"
+    enabled: ${{ ne(parameters['features'], '') }}
+    displayName: "[cli flag modify]Space-separated list of features to activate: ${{ parameters.test_build_flags['features'] }}"
 
   # *********************************************************************************************
   # parameters from libtest `cargo test -- --help`
@@ -136,7 +154,7 @@ jobs:
       displayName: "[cli flag modify] unstable-option: ${{ z }}"
 
   # *********************************************************************************************
-  - script: cargo test -- $(check_flags)
+  - script: cargo test $(test_build_flags) -- $(check_flags)
     displayName: cargo test
 
   # Custom steps:
